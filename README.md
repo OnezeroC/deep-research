@@ -1,5 +1,13 @@
 # Deep Research
 
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Anthropic](https://img.shields.io/badge/AI-Anthropic_|_OpenAI_|_DeepSeek-8A2BE2?logo=openai&logoColor=white)](#)
+[![License](https://img.shields.io/badge/License-MIT-green)](./LICENSE)
+
 AI-powered research assistant that searches multiple platforms, synthesizes findings with Claude, and generates comprehensive research reports.
 
 ## Features
