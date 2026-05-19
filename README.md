@@ -10,6 +10,8 @@
 
 AI-powered research assistant that searches multiple platforms, synthesizes findings with Claude, and generates comprehensive research reports.
 
+[中文文档](./README_CN.md)
+
 ## Features
 
 - **Multi-source search**: arXiv, Semantic Scholar, Reddit, Twitter/X, Xiaohongshu, and web search
