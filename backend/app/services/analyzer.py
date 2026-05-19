@@ -4,6 +4,7 @@ from typing import List
 from app.config import settings
 from app.plugins.base import SearchResult
 from app.providers import create_provider
+from app.providers.base import BaseProvider
 
 logger = logging.getLogger(__name__)
 
@@ -57,8 +58,12 @@ All text should be in English. If the topic is in Chinese, translate to English 
 
 class Analyzer:
     def __init__(self):
-        self.provider = create_provider()
-        self._max_tokens = self._get_max_tokens()
+        self._provider: BaseProvider | None = None
+
+    def _get_provider(self) -> BaseProvider:
+        if self._provider is None:
+            self._provider = create_provider()
+        return self._provider
 
     def _get_max_tokens(self) -> int:
         provider_name = settings.ai_provider
@@ -124,12 +129,12 @@ Each result is numbered [0] through [{max_index}].
 
 Please provide your structured analysis of the research landscape for this topic."""
 
-        provider_name = self.provider.name
-        logger.info(f"Sending {len(results)} results to {provider_name} for analysis")
+        provider = self._get_provider()
+        logger.info(f"Sending {len(results)} results to {provider.name} for analysis")
 
-        text = await self.provider.analyze(SYSTEM_PROMPT, user_message, self._max_tokens)
+        text = await provider.analyze(SYSTEM_PROMPT, user_message, self._get_max_tokens())
 
         if not text:
-            raise ValueError(f"{provider_name} returned no text content")
+            raise ValueError(f"{provider.name} returned no text content")
 
         return self._extract_json(text)

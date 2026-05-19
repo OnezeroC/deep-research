@@ -9,7 +9,7 @@ interface MarkdownViewProps {
 
 export default function MarkdownView({ content }: MarkdownViewProps) {
   return (
-    <div className="prose prose-invert max-w-none">
+    <div className="prose-invert" style={{ maxWidth: 'none', color: '#d1d5db', lineHeight: 1.7 }}>
       <ReactMarkdown
         remarkPlugins={[remarkMath]}
         rehypePlugins={[rehypeKatex, rehypeHighlight]}

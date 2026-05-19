@@ -8,20 +8,22 @@ import TimelineView from '../components/TimelineView';
 import ExportPanel from '../components/ExportPanel';
 import MarkdownView from '../components/MarkdownView';
 import { PlusCircle, ArrowLeft } from 'lucide-react';
+import { useEffect } from 'react';
 
 export default function ResultsPage() {
   const { taskId } = useParams<{ taskId: string }>();
   const { task, loading, refetch } = useResearch(taskId || null);
   const { events, done } = useSSE(taskId || null);
 
-  // Refetch full results when SSE signals done
-  if (done && task?.status !== 'done') {
-    refetch();
-  }
+  useEffect(() => {
+    if (done && task?.status !== 'done') {
+      refetch();
+    }
+  }, [done]);
 
   if (!taskId) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500">
+      <div className="flex items-center justify-center h-full text-gray-400">
         No research task specified.
       </div>
     );
@@ -34,15 +36,15 @@ export default function ResultsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <Link to="/" className="text-gray-500 hover:text-white transition">
+          <Link to="/" className="text-gray-400 hover:text-white">
             <ArrowLeft size={20} />
           </Link>
           <div>
             <h1 className="text-xl font-bold text-white">{task?.query || 'Loading...'}</h1>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-400">
               {task?.status === 'done' ? 'Research complete'
                 : task?.status === 'failed' ? 'Research failed'
-                : `Processing — ${task?.progress_message || 'Starting...'}`}
+                : task?.status ? `Processing — ${task.progress_message || 'Starting...'}` : 'Loading...'}
             </p>
           </div>
         </div>
@@ -52,7 +54,7 @@ export default function ResultsPage() {
           )}
           <Link
             to="/"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs"
           >
             <PlusCircle size={14} />
             New
@@ -70,12 +72,16 @@ export default function ResultsPage() {
       {/* Error */}
       {task?.status === 'failed' && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6 mb-6">
-          <h3 className="text-red-400 font-medium">Research Failed</h3>
+          <h3 className="text-red-400 font-medium text-lg">Research Failed</h3>
           <p className="text-red-300/80 text-sm mt-1">{task?.error || 'Unknown error'}</p>
-          <Link
-            to="/"
-            className="inline-block mt-3 text-sm text-blue-400 hover:text-blue-300"
-          >
+          {task.search_results && task.search_results.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-red-500/20">
+              <p className="text-sm text-gray-300 mb-2">
+                Search completed with {task.search_results.length} results before failure.
+              </p>
+            </div>
+          )}
+          <Link to="/" className="inline-block mt-4 text-sm text-blue-400 hover:text-blue-300">
             Try again
           </Link>
         </div>
@@ -139,11 +145,10 @@ export default function ResultsPage() {
                       </div>
                     )}
                     <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-                      <p className="text-xs text-gray-500">{a.search_quality_assessment}</p>
+                      <p className="text-xs text-gray-400">{a.search_quality_assessment}</p>
                     </div>
                   </div>
                 );
-
               case 'hotspots':
                 return (
                   <div className="space-y-4">
@@ -155,16 +160,13 @@ export default function ResultsPage() {
                             h.intensity === 'high' ? 'bg-red-500/20 text-red-400'
                             : h.intensity === 'medium' ? 'bg-yellow-500/20 text-yellow-400'
                             : 'bg-gray-500/20 text-gray-400'
-                          }`}>
-                            {h.intensity}
-                          </span>
+                          }`}>{h.intensity}</span>
                         </div>
                         <p className="text-sm text-gray-300">{h.description}</p>
                       </div>
                     ))}
                   </div>
                 );
-
               case 'timeline':
                 return (
                   <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
@@ -176,7 +178,6 @@ export default function ResultsPage() {
                     )}
                   </div>
                 );
-
               case 'innovations':
                 return (
                   <div className="space-y-4">
@@ -184,29 +185,21 @@ export default function ResultsPage() {
                       <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-5">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="text-sm font-semibold text-white">{inv.innovation}</h3>
-                          <span className="text-xs text-gray-500 font-mono">{inv.year}</span>
+                          <span className="text-xs text-gray-400 font-mono">{inv.year}</span>
                         </div>
                         <p className="text-sm text-gray-300">{inv.significance}</p>
                       </div>
                     ))}
                   </div>
                 );
-
               case 'papers':
                 return (
                   <div className="space-y-3">
                     {a.key_papers_and_discussions.map((p, i) => (
-                      <PaperCard
-                        key={i}
-                        title={p.title}
-                        source={p.source}
-                        summary={p.why_important}
-                        url={p.url}
-                      />
+                      <PaperCard key={i} title={p.title} source={p.source} summary={p.why_important} url={p.url} />
                     ))}
                   </div>
                 );
-
               case 'debates':
                 return (
                   <div className="space-y-4">
@@ -218,7 +211,6 @@ export default function ResultsPage() {
                     ))}
                   </div>
                 );
-
               case 'raw':
                 return (
                   <div className="space-y-3">
@@ -236,7 +228,6 @@ export default function ResultsPage() {
                     ))}
                   </div>
                 );
-
               default:
                 return null;
             }
