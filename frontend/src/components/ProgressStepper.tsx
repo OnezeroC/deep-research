@@ -1,4 +1,4 @@
-import { SSEEvent } from '../lib/types';
+import type { SSEEvent } from '../lib/types';
 
 const PHASES = [
   { key: 'searching', label: 'Searching', icon: '🔍' },
