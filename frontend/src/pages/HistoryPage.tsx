@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useHistory } from '../hooks/useResearch';
+import { useI18n } from '../lib/i18n';
 import { Clock, Trash2, ArrowRight, Loader2 } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -13,10 +14,11 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function HistoryPage() {
   const { tasks, loading, remove } = useHistory();
+  const { t } = useI18n();
 
   return (
     <div className="max-w-4xl mx-auto px-8 py-8">
-      <h1 className="text-2xl font-bold text-white mb-6">Research History</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">{t('history.title')}</h1>
 
       {loading && tasks.length === 0 && (
         <div className="flex items-center justify-center py-20 text-gray-500">
@@ -27,9 +29,9 @@ export default function HistoryPage() {
       {!loading && tasks.length === 0 && (
         <div className="text-center py-20">
           <Clock size={48} className="mx-auto text-gray-700 mb-4" />
-          <p className="text-gray-500">No research history yet.</p>
+          <p className="text-gray-500">{t('history.empty')}</p>
           <Link to="/" className="text-sm text-blue-400 hover:text-blue-300 mt-2 inline-block">
-            Start your first research
+            {t('history.start')}
           </Link>
         </div>
       )}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { usePlugins } from '../hooks/usePlugins';
 import { getConfig } from '../lib/api';
+import { useI18n } from '../lib/i18n';
 import { Loader2, Brain } from 'lucide-react';
 
 const PLUGIN_META: Record<string, { displayName: string; description: string; category: string; requiresAuth: boolean }> = {
@@ -33,6 +34,7 @@ interface Config {
 
 export default function SettingsPage() {
   const { plugins, loading, toggle } = usePlugins();
+  const { t } = useI18n();
   const [config, setConfig] = useState<Config | null>(null);
   const [configLoading, setConfigLoading] = useState(true);
 
@@ -45,13 +47,13 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-8 py-8">
-      <h1 className="text-2xl font-bold text-white mb-8">Settings</h1>
+      <h1 className="text-2xl font-bold text-white mb-8">{t('settings.title')}</h1>
 
       {/* AI Provider */}
       <div className="mb-10">
         <div className="flex items-center gap-2 mb-4">
           <Brain size={16} className="text-blue-400" />
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">AI Provider</h2>
+          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">{t('settings.aiProvider')}</h2>
         </div>
 
         {configLoading ? (
@@ -63,7 +65,7 @@ export default function SettingsPage() {
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 font-medium uppercase">
-                  Active
+                  {t('settings.active')}
                 </span>
                 <span className="text-sm font-medium text-white">
                   {PROVIDER_META[config.ai_provider]?.name || config.ai_provider}
@@ -74,15 +76,14 @@ export default function SettingsPage() {
               </p>
               {config.providers[config.ai_provider] && (
                 <div className="mt-2 flex items-center gap-4 text-[11px] text-gray-600">
-                  <span>Model: <code className="text-gray-400">{config.providers[config.ai_provider].model}</code></span>
-                  <span>Key: {config.providers[config.ai_provider].has_key ? 'Configured' : 'Not set'}</span>
+                  <span>{t('settings.model')} <code className="text-gray-400">{config.providers[config.ai_provider].model}</code></span>
+                  <span>{config.providers[config.ai_provider].has_key ? t('settings.configured') : t('settings.notSet')}</span>
                 </div>
               )}
             </div>
 
             <p className="text-xs text-gray-600">
-              To switch providers, set <code className="text-gray-400">AI_PROVIDER</code> and the corresponding API key
-              in your <code className="text-gray-400">backend/.env</code> file, then restart the backend.
+              {t('settings.switchHint')}
             </p>
 
             <div className="grid grid-cols-2 gap-2">
@@ -109,7 +110,7 @@ export default function SettingsPage() {
                         <span className={`px-1 py-0.5 rounded ${
                           providerConfig.has_key ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                         }`}>
-                          {providerConfig.has_key ? 'key set' : 'no key'}
+                          {providerConfig.has_key ? t('settings.keySet') : t('settings.noKey')}
                         </span>
                       </div>
                     )}
@@ -119,13 +120,13 @@ export default function SettingsPage() {
             </div>
           </div>
         ) : (
-          <p className="text-xs text-gray-500">Failed to load config. Is the backend running?</p>
+          <p className="text-xs text-gray-500">{t('settings.loadFailed')}</p>
         )}
       </div>
 
       {/* Search Sources */}
       <div className="space-y-2">
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Search Sources</h2>
+        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">{t('settings.sources')}</h2>
 
         {loading && plugins.length === 0 && (
           <div className="flex items-center justify-center py-10 text-gray-500">

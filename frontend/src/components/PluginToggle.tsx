@@ -1,3 +1,5 @@
+import { useI18n } from '../lib/i18n';
+
 interface PluginToggleProps {
   selected: string[];
   onChange: (selected: string[]) => void;
@@ -19,6 +21,8 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function PluginToggle({ selected, onChange }: PluginToggleProps) {
+  const { t } = useI18n();
+
   const toggle = (name: string) => {
     if (selected.includes(name)) {
       onChange(selected.filter((s) => s !== name));
@@ -42,10 +46,9 @@ export default function PluginToggle({ selected, onChange }: PluginToggleProps) 
             }`}
           >
             <span className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded font-medium ${CATEGORY_COLORS[meta.category]}`}>
-              {meta.category}
+              {t(`plugin.${meta.category}`)}
             </span>
             <span className="font-medium">{meta.name}</span>
-            <span className="text-gray-600 text-xs hidden sm:inline">{meta.description.slice(0, 20)}...</span>
           </button>
         );
       })}

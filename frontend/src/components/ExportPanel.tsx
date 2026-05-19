@@ -1,5 +1,6 @@
 import { FileText, FileCode, FileArchive } from 'lucide-react';
 import { getOutputUrl } from '../lib/api';
+import { useI18n } from '../lib/i18n';
 
 interface ExportPanelProps {
   taskId: string;
@@ -7,15 +8,17 @@ interface ExportPanelProps {
 }
 
 export default function ExportPanel({ taskId, formats }: ExportPanelProps) {
+  const { t } = useI18n();
+
   const buttons = [
-    { format: 'md', icon: FileText, label: 'Markdown', ext: '.md' },
-    { format: 'tex', icon: FileCode, label: 'LaTeX', ext: '.tex' },
-    { format: 'pdf', icon: FileArchive, label: 'PDF', ext: '.pdf' },
+    { format: 'md', icon: FileText, label: t('export.markdown'), ext: '.md' },
+    { format: 'tex', icon: FileCode, label: t('export.latex'), ext: '.tex' },
+    { format: 'pdf', icon: FileArchive, label: t('export.pdf'), ext: '.pdf' },
   ].filter((b) => formats.includes(b.format));
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-gray-500 mr-1">Download:</span>
+      <span className="text-xs text-gray-500 mr-1">{t('results.download')}</span>
       {buttons.map((btn) => (
         <a
           key={btn.format}

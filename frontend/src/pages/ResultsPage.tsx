@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useResearch } from '../hooks/useResearch';
 import { useSSE } from '../hooks/useSSE';
+import { useI18n } from '../lib/i18n';
 import ProgressStepper from '../components/ProgressStepper';
 import ResultsTabs from '../components/ResultsTabs';
 import PaperCard from '../components/PaperCard';
@@ -12,8 +13,9 @@ import { useEffect } from 'react';
 
 export default function ResultsPage() {
   const { taskId } = useParams<{ taskId: string }>();
-  const { task, loading, refetch } = useResearch(taskId || null);
+  const { task, refetch } = useResearch(taskId || null);
   const { events, done } = useSSE(taskId || null);
+  const { t } = useI18n();
 
   useEffect(() => {
     if (done && task?.status !== 'done') {
@@ -24,7 +26,7 @@ export default function ResultsPage() {
   if (!taskId) {
     return (
       <div className="flex items-center justify-center h-full text-gray-400">
-        No research task specified.
+        {t('results.noTask')}
       </div>
     );
   }
@@ -40,11 +42,11 @@ export default function ResultsPage() {
             <ArrowLeft size={20} />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-white">{task?.query || 'Loading...'}</h1>
+            <h1 className="text-xl font-bold text-white">{task?.query || t('results.loading')}</h1>
             <p className="text-xs text-gray-400">
-              {task?.status === 'done' ? 'Research complete'
-                : task?.status === 'failed' ? 'Research failed'
-                : task?.status ? `Processing — ${task.progress_message || 'Starting...'}` : 'Loading...'}
+              {task?.status === 'done' ? t('results.complete')
+                : task?.status === 'failed' ? t('results.failed')
+                : task?.status ? `${t('results.processing')} — ${task.progress_message || t('results.starting')}` : t('results.loading')}
             </p>
           </div>
         </div>
@@ -57,7 +59,7 @@ export default function ResultsPage() {
             className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs"
           >
             <PlusCircle size={14} />
-            New
+            {t('results.new')}
           </Link>
         </div>
       </div>
@@ -72,17 +74,17 @@ export default function ResultsPage() {
       {/* Error */}
       {task?.status === 'failed' && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6 mb-6">
-          <h3 className="text-red-400 font-medium text-lg">Research Failed</h3>
-          <p className="text-red-300/80 text-sm mt-1">{task?.error || 'Unknown error'}</p>
+          <h3 className="text-red-400 font-medium text-lg">{t('results.failedTitle')}</h3>
+          <p className="text-red-300/80 text-sm mt-1">{task?.error || t('results.failedErr')}</p>
           {task.search_results && task.search_results.length > 0 && (
             <div className="mt-4 pt-4 border-t border-red-500/20">
               <p className="text-sm text-gray-300 mb-2">
-                Search completed with {task.search_results.length} results before failure.
+                {t('results.searchCompleted', { n: task.search_results.length })}
               </p>
             </div>
           )}
           <Link to="/" className="inline-block mt-4 text-sm text-blue-400 hover:text-blue-300">
-            Try again
+            {t('results.tryAgain')}
           </Link>
         </div>
       )}
@@ -91,13 +93,13 @@ export default function ResultsPage() {
       {task?.status === 'done' && task.analysis_structured && (
         <ResultsTabs
           tabs={[
-            { id: 'summary', label: 'Summary' },
-            { id: 'hotspots', label: 'Hotspots', count: task.analysis_structured.research_hotspots.length },
-            { id: 'timeline', label: 'Timeline' },
-            { id: 'innovations', label: 'Innovations', count: task.analysis_structured.key_innovations.length },
-            { id: 'papers', label: 'Papers', count: task.analysis_structured.key_papers_and_discussions.length },
-            { id: 'debates', label: 'Debates', count: task.analysis_structured.controversies_and_debates.length },
-            { id: 'raw', label: 'Raw Results', count: task.search_results?.length },
+            { id: 'summary', label: t('results.tab.summary') },
+            { id: 'hotspots', label: t('results.tab.hotspots'), count: task.analysis_structured.research_hotspots.length },
+            { id: 'timeline', label: t('results.tab.timeline') },
+            { id: 'innovations', label: t('results.tab.innovations'), count: task.analysis_structured.key_innovations.length },
+            { id: 'papers', label: t('results.tab.papers'), count: task.analysis_structured.key_papers_and_discussions.length },
+            { id: 'debates', label: t('results.tab.debates'), count: task.analysis_structured.controversies_and_debates.length },
+            { id: 'raw', label: t('results.tab.raw'), count: task.search_results?.length },
           ]}
         >
           {(activeTab) => {
@@ -111,20 +113,20 @@ export default function ResultsPage() {
                     </div>
                     {a.emerging_trends.length > 0 && (
                       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-                        <h3 className="text-sm font-semibold text-white mb-3">Emerging Trends</h3>
+                        <h3 className="text-sm font-semibold text-white mb-3">{t('results.emerging')}</h3>
                         <div className="space-y-3">
-                          {a.emerging_trends.map((t, i) => (
+                          {a.emerging_trends.map((tr, i) => (
                             <div key={i} className="flex items-start gap-3">
                               <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 mt-0.5 ${
-                                t.confidence === 'high' ? 'bg-green-500/20 text-green-400'
-                                : t.confidence === 'medium' ? 'bg-yellow-500/20 text-yellow-400'
+                                tr.confidence === 'high' ? 'bg-green-500/20 text-green-400'
+                                : tr.confidence === 'medium' ? 'bg-yellow-500/20 text-yellow-400'
                                 : 'bg-gray-500/20 text-gray-400'
                               }`}>
-                                {t.confidence}
+                                {tr.confidence}
                               </span>
                               <div>
-                                <p className="text-sm font-medium text-white">{t.trend}</p>
-                                <p className="text-xs text-gray-400 mt-0.5">{t.evidence}</p>
+                                <p className="text-sm font-medium text-white">{tr.trend}</p>
+                                <p className="text-xs text-gray-400 mt-0.5">{tr.evidence}</p>
                               </div>
                             </div>
                           ))}
@@ -133,7 +135,7 @@ export default function ResultsPage() {
                     )}
                     {a.gaps_and_opportunities.length > 0 && (
                       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-                        <h3 className="text-sm font-semibold text-white mb-3">Gaps & Opportunities</h3>
+                        <h3 className="text-sm font-semibold text-white mb-3">{t('results.gaps')}</h3>
                         <div className="space-y-3">
                           {a.gaps_and_opportunities.map((g, i) => (
                             <div key={i} className="border-l-2 border-blue-500/50 pl-3">
