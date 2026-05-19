@@ -63,6 +63,42 @@ async def create_research(req: ResearchRequest):
     return {"task_id": task_id, "status": "pending"}
 
 
+@router.get("/research/history")
+async def get_history(limit: int = 20, offset: int = 0):
+    db = await get_db()
+    try:
+        async with db.execute(
+            "SELECT COUNT(*) as total FROM research_tasks"
+        ) as cursor:
+            total_row = await cursor.fetchone()
+            total = total_row["total"] if total_row else 0
+
+        async with db.execute(
+            "SELECT * FROM research_tasks ORDER BY created_at DESC LIMIT ? OFFSET ?",
+            (limit, offset)
+        ) as cursor:
+            rows = await cursor.fetchall()
+
+        tasks = []
+        for row in rows:
+            tasks.append({
+                "task_id": row["id"],
+                "query": row["query"],
+                "status": row["status"],
+                "progress": row["progress"],
+                "progress_message": row["progress_message"],
+                "plugins_used": json.loads(row["plugins_used"]) if row["plugins_used"] else [],
+                "created_at": row["created_at"],
+                "updated_at": row["updated_at"],
+                "completed_at": row["completed_at"],
+                "error": row["error"],
+            })
+
+        return {"tasks": tasks, "total": total}
+    finally:
+        await db.close()
+
+
 @router.get("/research/{task_id}")
 async def get_research(task_id: str):
     db = await get_db()
@@ -127,42 +163,6 @@ async def stream_research(task_id: str, request: Request):
             "X-Accel-Buffering": "no",
         },
     )
-
-
-@router.get("/research/history")
-async def get_history(limit: int = 20, offset: int = 0):
-    db = await get_db()
-    try:
-        async with db.execute(
-            "SELECT COUNT(*) as total FROM research_tasks"
-        ) as cursor:
-            total_row = await cursor.fetchone()
-            total = total_row["total"] if total_row else 0
-
-        async with db.execute(
-            "SELECT * FROM research_tasks ORDER BY created_at DESC LIMIT ? OFFSET ?",
-            (limit, offset)
-        ) as cursor:
-            rows = await cursor.fetchall()
-
-        tasks = []
-        for row in rows:
-            tasks.append({
-                "task_id": row["id"],
-                "query": row["query"],
-                "status": row["status"],
-                "progress": row["progress"],
-                "progress_message": row["progress_message"],
-                "plugins_used": json.loads(row["plugins_used"]) if row["plugins_used"] else [],
-                "created_at": row["created_at"],
-                "updated_at": row["updated_at"],
-                "completed_at": row["completed_at"],
-                "error": row["error"],
-            })
-
-        return {"tasks": tasks, "total": total}
-    finally:
-        await db.close()
 
 
 @router.delete("/research/{task_id}", status_code=204)

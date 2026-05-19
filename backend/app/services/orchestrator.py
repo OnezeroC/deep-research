@@ -66,14 +66,26 @@ class Orchestrator:
             await self._emit(progress_callback, "analyzing", 0.45, "Sending to Claude for deep analysis...")
 
             # Phase 3: Analyze
-            analysis = await self.analyzer.analyze(query, deduped)
+            try:
+                analysis = await self.analyzer.analyze(query, deduped)
 
-            analysis_json = json.dumps(analysis, ensure_ascii=False)
-            await db.execute(
-                "UPDATE research_tasks SET analysis_structured = ? WHERE id = ?",
-                (analysis_json, task_id)
-            )
-            await db.commit()
+                analysis_json = json.dumps(analysis, ensure_ascii=False)
+                raw_text = getattr(self.analyzer, '_last_raw', '')
+                await db.execute(
+                    "UPDATE research_tasks SET analysis_structured = ?, analysis_raw = ? WHERE id = ?",
+                    (analysis_json, raw_text, task_id)
+                )
+                await db.commit()
+            except Exception as analyze_error:
+                raw_text = getattr(self.analyzer, '_last_raw', '')
+                err_msg = str(analyze_error)
+                # Save raw response even on failure for debugging
+                await db.execute(
+                    "UPDATE research_tasks SET analysis_raw = ?, error = ? WHERE id = ?",
+                    (raw_text, err_msg, task_id)
+                )
+                await db.commit()
+                raise
 
             await self._update_task(db, task_id, "generating", 0.7, "Generating output files...")
             await self._emit(progress_callback, "generating", 0.7, "Generating reports...")

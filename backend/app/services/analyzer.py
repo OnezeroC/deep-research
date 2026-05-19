@@ -92,29 +92,55 @@ class Analyzer:
             )
         return "\n\n".join(lines)
 
+    @staticmethod
+    def _repair_json(text: str) -> str:
+        """Fix common LLM JSON mistakes."""
+        import re
+        # Remove trailing commas before ] or }
+        text = re.sub(r",\s*(\]|\})", r"\1", text)
+        # Remove commas before newline + } or ]
+        text = re.sub(r",(\s*\n\s*[\}\]])", r"\1", text)
+        # Fix year ranges: "year": 2019-2020 -> "year": "2019-2020"
+        text = re.sub(r'("year"\s*:\s*)(\d{4})\s*-\s*(\d{4})', r'\1"\2-\3"', text)
+        return text
+
     def _extract_json(self, text: str) -> dict:
         text = text.strip()
-        try:
-            return json.loads(text)
-        except json.JSONDecodeError:
-            pass
+        extract_attempts = [text]
 
         if "```json" in text:
-            start = text.index("```json") + 7
-            end = text.index("```", start)
-            return json.loads(text[start:end].strip())
+            try:
+                start = text.index("```json") + 7
+                end = text.index("```", start)
+                extract_attempts.insert(0, text[start:end].strip())
+            except (ValueError, IndexError):
+                pass
 
         if "```" in text:
-            start = text.index("```") + 3
-            end = text.index("```", start)
-            return json.loads(text[start:end].strip())
+            try:
+                start = text.index("```") + 3
+                end = text.index("```", start)
+                extract_attempts.insert(0, text[start:end].strip())
+            except (ValueError, IndexError):
+                pass
 
         first_brace = text.find("{")
         last_brace = text.rfind("}")
         if first_brace >= 0 and last_brace > first_brace:
-            return json.loads(text[first_brace:last_brace + 1])
+            extract_attempts.insert(0, text[first_brace:last_brace + 1])
 
-        raise ValueError(f"Could not parse JSON from response: {text[:200]}...")
+        for attempt in extract_attempts:
+            try:
+                return json.loads(attempt)
+            except json.JSONDecodeError:
+                pass
+            # Try repaired version
+            try:
+                return json.loads(self._repair_json(attempt))
+            except json.JSONDecodeError:
+                pass
+
+        raise ValueError(f"Could not parse JSON from response: {text[:300]}...")
 
     async def analyze(self, query: str, results: List[SearchResult]) -> dict:
         formatted = self._format_results(results)
@@ -136,5 +162,8 @@ Please provide your structured analysis of the research landscape for this topic
 
         if not text:
             raise ValueError(f"{provider.name} returned no text content")
+
+        # Save raw response for debugging
+        self._last_raw = text
 
         return self._extract_json(text)
